@@ -4,7 +4,7 @@ from ..structuralComponent.element import Element
 from ..model.abstractEntity import AbstractEntity
 
 
-__all__ = ['BoltEntity', 'BoltRingEntity', 'BoltGroupEntity']
+__all__ = ['BoltElement', 'BoltEntity', 'BoltRingInstance', 'BoltGroupInstance']
 
 
 class BoltElement(Element):
@@ -12,31 +12,47 @@ class BoltElement(Element):
         super(BoltElement, self).__init__(structElem_id, 4, ringNumber, subElem_id, seqNumber, _cid, nodes, parent, manager)
 
     def __repr__(self):
-        return 'Bolt element {_cid}'.format(_cid=self.pointer.component_id())
+        return 'Bolt element {_cid} at {pos}'.format(
+            _cid=self.pointer.component_id(),
+            pos=self.pointer.pos()
+        )
 
-class BoltRingEntity(AbstractEntity):
+class BoltRingInstance(AbstractEntity):
     def __init__(self, y_Coord, boltRing, parent, manager):
-        super(BoltRingEntity, self).__init__(parent, manager)
+        super(BoltRingInstance, self).__init__(parent, manager)
         self.y_Coord = y_Coord
         self.boltRing = boltRing
-        self.boltGroupEntityList = []
+        self.boltGroupInstanceList = []
+
+    def __repr__(self):
+        return 'BoltRing instance at Y={y_Coord}'.format(y_Coord=self.y_Coord)
 
     @property
     def ringNumber(self):
         return self.boltRing._instances.index(self) + 1
 
-    def createBoltGroupEntity(self, boltGroup):
-        _boltGroupEntity = BoltGroupEntity(boltGroup, self, self.manager)
-        self.boltGroupEntityList.append(_boltGroupEntity)
-        boltGroup._instances.append(_boltGroupEntity)
-        return _boltGroupEntity
+    def createBoltGroupInstance(self, boltGroup):
+        _boltGroupInstance = BoltGroupInstance(boltGroup, self, self.manager)
+        self.boltGroupInstanceList.append(_boltGroupInstance)
+        boltGroup._instances.append(_boltGroupInstance)
+        return _boltGroupInstance
 
 
-class BoltGroupEntity(AbstractEntity):
+class BoltGroupInstance(AbstractEntity):
     def __init__(self, boltGroup, parent, manager):
-        super(BoltGroupEntity, self).__init__(parent, manager)
+        super(BoltGroupInstance, self).__init__(parent, manager)
         self.boltGroup = boltGroup
         self.boltEntityList = []
+
+    def __repr__(self):
+        return '{groupNumber}th bolt group instance at Y={y_Coord}'.format(
+            groupNumber=self.groupNumber,
+            y_Coord=self.parent.y_Coord
+        )
+
+    @property
+    def groupNumber(self):
+        return self.parnet.boltGroupInstanceList.index(self) + 1
 
     def createBoltEntity(self):
         _boltEntity = BoltEntity(self, self.manager)
@@ -48,6 +64,9 @@ class BoltEntity(AbstractEntity):
     def __init__(self, parent, manager):
         super(BoltEntity, self).__init__(parent, manager)
         self.elementList = []
+
+    def __repr__(self):
+        return '{subElem_id}th bolt entity'.format(subElem_id=self.subElem_id)
 
     @property
     def subElem_id(self):

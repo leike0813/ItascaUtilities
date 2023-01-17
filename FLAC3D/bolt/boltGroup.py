@@ -21,7 +21,7 @@ class BoltGroup_Abstract(object):
         self._instances = []
 
     def applyBolt_Group(self, y_, parentInstance):
-        _instance = parentInstance.createBoltGroupEntity(self)
+        _instance = parentInstance.createBoltGroupInstance(self)
         _cid = it.structure.maxid() + 1
         node_cid = it.structure.node.maxid() + 1
         for i in range(self.n_Bolts):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import itasca as it
-from ..bolt.bolt import BoltRingEntity
+from ..bolt.bolt import BoltRingInstance
 
 __all__ = ['ModelEntityManager']
 
@@ -25,14 +25,14 @@ class ModelEntityManager:
         self.pileRoofRingEntityList = []
         self.tbmEntityList = []
 
-    def createArchRingEntity(self):
+    def createArchRingInstance(self):
         pass
 
     def createBoltRingEntity(self, y_Coord, boltRing):
-        _boltRingEntity = BoltRingEntity(y_Coord, boltRing, self, self)
-        self.boltRingEntityList.append(_boltRingEntity)
-        boltRing._instances.append(_boltRingEntity)
-        return _boltRingEntity
+        _boltRingInstance = BoltRingInstance(y_Coord, boltRing, self, self)
+        self.boltRingEntityList.append(_boltRingInstance)
+        boltRing._instances.append(_boltRingInstance)
+        return _boltRingInstance
 
 
 class AbstractSubManager(object):
