@@ -37,28 +37,28 @@ class TBMUtility(AbstractSubUtility):
         self._freezeDisp = _freezeDisp
 
     @convert_Group_To_GroupList
-    def newDiskGroup(self, groupName_or_List, n_Disks, diameter, tipWidth, model_Area, propertyDict, _id='default'):
+    def newDiskGroup(self, groupName_or_List, n_Disks, disk_Diameter, tipWidth, model_Area, propertyDict, eid='default'):
         if self.n_DiskGroups == 0:
             it.fish.set('disk_Torque', 0.0)
         self.__diskGroupList.append(
-            DiskGroup(groupName_or_List, n_Disks, diameter, tipWidth, model_Area, propertyDict, _id, self))
+            DiskGroup(groupName_or_List, n_Disks, disk_Diameter, tipWidth, model_Area, propertyDict, eid, self))
 
     @convert_Group_To_GroupList
     def setCutterHead(
-            self, groupName_or_List, cutterHeight, frictionCoef, propertyDict, _id='default', origin=None, diameter=None
+            self, groupName_or_List, cutterHeight, frictionCoef, propertyDict, eid='default', origin=None, diameter=None
     ):
         self.cutterHead = CutterHead(
-            groupName_or_List, origin, diameter, cutterHeight, frictionCoef, propertyDict, _id, self
+            groupName_or_List, origin, diameter, cutterHeight, frictionCoef, propertyDict, eid, self
         )
         it.fish.set('cutterHead_Torque', 0.0)
         it.fish.set('cutterHead_Thrust', 0.0)
 
     @convert_Group_To_GroupList
     def setShield(
-            self, groupName_or_List, lengthCoef, preserveDisp, frictionCoef, propertyDict, _id='default', origin=None, diameter=None
+            self, groupName_or_List, lengthCoef, preserveDisp, frictionCoef, propertyDict, eid='default', origin=None, diameter=None
     ):
         self.shield = Shield(
-            groupName_or_List, origin, diameter, lengthCoef, preserveDisp, frictionCoef, propertyDict, _id, self
+            groupName_or_List, origin, diameter, lengthCoef, preserveDisp, frictionCoef, propertyDict, eid, self
         )
         it.fish.set('shield_Thrust', 0.0)
 
@@ -85,36 +85,36 @@ class TBMUtility(AbstractSubUtility):
     def radius(self):
         return self.diameter / 2
 
-    def applyDisks(self, y_):
+    def applyDisks(self, y_Coord):
         for dg in self.__diskGroupList:
-            dg.applyDisk_Group(y_)
+            dg.applyDisk_Group(y_Coord)
         # it.command(
         #     'structure node fix velocity-x velocity-y velocity-z rotation-x rotation-y rotation-z range group ' \
-        #     + generateGroupRangePhrase(['__Disk_' + str(dg._id) + '__' for dg in self.diskGroups]) \
-        #     + ' position-y ' + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(y_ + 100 * gc.param['geom_tol'])
+        #     + generateGroupRangePhrase(['__Disk_' + str(dg.eid) + '__' for dg in self.diskGroups]) \
+        #     + ' position-y ' + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
         # )
         it.command(
             'structure node fix {fixityPhrase} range group {groupPhrase} {rangePhrase}'.format(
                 fixityPhrase=generateFixityPhrase(mode='Encastre'),
                 groupPhrase=generateGroupRangePhrase(
-                    ['__Disk_{dg_id}__'.format(dg_id=dg._id) for dg in self.diskGroups]
+                    ['__Disk_{dg_id}__'.format(dg_id=dg.eid) for dg in self.diskGroups]
                 ),
-                rangePhrase=generateRangePhrase(ypos=y_)
+                rangePhrase=generateRangePhrase(ypos=y_Coord)
             )
         )
 
-    def removeDisks(self, y_):
+    def removeDisks(self, y_Coord):
         # it.command(
         #     'structure liner delete range group ' \
-        #     + generateGroupRangePhrase(['__Disk_' + str(dg._id) + '__' for dg in self.diskGroups]) \
-        #     + ' position-y ' + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(y_ + 100 * gc.param['geom_tol'])
+        #     + generateGroupRangePhrase(['__Disk_' + str(dg.eid) + '__' for dg in self.diskGroups]) \
+        #     + ' position-y ' + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
         # )
         it.command(
             'structure liner delete range group {groupPhrase} {rangePhrase}'.format(
                 groupPhrase=generateGroupRangePhrase(
-                    ['__Disk_{dg_id}__'.format(dg_id=dg._id) for dg in self.diskGroups]
+                    ['__Disk_{dg_id}__'.format(dg_id=dg.id) for dg in self.diskGroups]
                 ),
-                rangePhrase=generateRangePhrase(ypos=y_)
+                rangePhrase=generateRangePhrase(ypos=y_Coord)
             )
         )
 
@@ -143,7 +143,7 @@ class TBMUtility(AbstractSubUtility):
         for dg in self.diskGroups:
             dg_Pressure = 0
             for el in it.structure.list():
-                if el.in_group('__Disk_' + str(dg._id) + '__'):
+                if el.in_group('__Disk_' + str(dg.id) + '__'):
                     el_Pressure = -(sum(el.normal_stress()) / 3) * el.area() * dg.area_Ratio  # 模型计算得到的单元正应力(反号，压力为正)
                     el_Pressure_Thrust = _thrust_Uni * el.area() * dg.area_Ratio if el_Pressure > 0 else 0.0  # 推力导致的单元正应力
                     el_Arm = math.sqrt(

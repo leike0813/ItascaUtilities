@@ -10,11 +10,11 @@ from .. import globalContainer as gc
 __all__ = ['Shield']
 
 class Shield(AbstractTBMComponent):
-    base_ID = gc.param['id_base_offset'] + 99
-    def __init__(self, groupList, origin, diameter, lengthCoef, preserveDisp, frictionCoef, propertyDict, _id, tbmUtil):
-        if _id == 'default':
-            _id = Shield.base_ID
-        super(Shield, self).__init__(groupList, propertyDict, _id, tbmUtil)
+    base_eid = gc.param['eid_base_offset'] + 99
+    def __init__(self, groupList, origin, diameter, lengthCoef, preserveDisp, frictionCoef, propertyDict, eid, util):
+        if eid == 'default':
+            eid = Shield.base_eid
+        super(Shield, self).__init__(groupList, propertyDict, eid, util)
         self.lengthCoef = lengthCoef
         self.preserveDisp = preserveDisp
         self.frictionCoef = frictionCoef
@@ -43,11 +43,11 @@ class Shield(AbstractTBMComponent):
 
     @property
     def origin(self):
-        return self.tbmUtil.origin if self.__origin == None else self.__origin
+        return self.util.origin if self.__origin == None else self.__origin
 
     @property
     def diameter(self):
-        return self.tbmUtil.diameter if self.__diameter == None else self.__diameter
+        return self.util.diameter if self.__diameter == None else self.__diameter
 
     @property
     def radius(self):
@@ -61,8 +61,8 @@ class Shield(AbstractTBMComponent):
                 if gp.in_group(gr, 'any'):
                     for i in range(self.modelUtil.excaUtil.n_ExcaStep):
                         if (
-                                (gp.pos_y() < self.model.excaUtil.y_BoundList[i][1 ]+ gc.param['geom_tol'])
-                                and (gp.pos_y() > self.model.excaUtil.y_BoundList[i][0] - gc.param['geom_tol'])
+                                (gp.pos_y() < self.modelUtil.excaUtil.y_BoundList[i][1 ]+ gc.param['geom_tol'])
+                                and (gp.pos_y() > self.modelUtil.excaUtil.y_BoundList[i][0] - gc.param['geom_tol'])
                                 and (
                                 abs(
                                     (gp.pos_x() - origin[0]) ** 2 + (gp.pos_z() - origin[1]) ** 2 - diameter ** 2 / 4.0
@@ -83,13 +83,13 @@ class Shield(AbstractTBMComponent):
     def restoreExcaBoundGridpoints(state):
         state['excaBoundGridpoints'] = []
         for _group in state['excaBoundGridpoints_ID']:
-            state['excaBoundGridpoints'].append([it.gridpoint.find(_id) for _id in _group])
+            state['excaBoundGridpoints'].append([it.gridpoint.find(id) for id in _group])
         state.pop('excaBoundGridpoints_ID')
 
     @y_Bound_Detect('y_Bound')
     def applyShield_Coord(self, y_Bound):
         # it.command(
-        #     'structure liner create by-face id ' + str(self._id) \
+        #     'structure liner create by-face id ' + str(self.eid) \
         #     + ' group "__Shield__" slot "__TBMUtil__" range group ' \
         #     + generateGroupRangePhrase(self.groupList) + ' cylinder end-1 ' \
         #     + str(self.origin[0]) + ' ' + str(y_Bound[0] - 100 * gc.param['geom_tol'])\
@@ -99,7 +99,7 @@ class Shield(AbstractTBMComponent):
         # )
         it.command(
             'structure liner create by-face id {id} group {sourceGroup} slot {sourceSlot} range group {groupPhrase} {rangePhrase}'.format(
-                id=self._id,
+                id=self.eid,
                 sourceGroup='"__Shield__"',
                 sourceSlot='"__TBMUtil__"',
                 groupPhrase=generateGroupRangePhrase(self.groupList),
@@ -112,7 +112,7 @@ class Shield(AbstractTBMComponent):
         )
         # it.command(
         #     'structure liner property ' + generatePropertyPhrase(self.propertyDict) \
-        #     + ' range id ' + str(self._id) + ' group "__Shield__" position-y ' \
+        #     + ' range id ' + str(self.eid) + ' group "__Shield__" position-y ' \
         #     + str(y_Bound[0] - 100 * gc.param['geom_tol']) + ' ' + str(y_Bound[1] + 100 * gc.param['geom_tol'])
         # )
         it.command(
@@ -121,13 +121,13 @@ class Shield(AbstractTBMComponent):
                 groupPhrase='"__Shield__"',
                 rangePhrase=generateRangePhrase(
                     ypos=y_Bound,
-                    id=self._id
+                    id=self.eid
                 )
             )
         )
         if self.preserveDisp > 0:
             # it.command(
-            #     'structure link delete range id ' + str(self._id) + ' group "__Shield__" position-y ' \
+            #     'structure link delete range id ' + str(self.eid) + ' group "__Shield__" position-y ' \
             #     + str(y_Bound[0] - 100 * gc.param['geom_tol']) + ' ' + str(y_Bound[1] + 100 * gc.param['geom_tol'])
             # )
             it.command(
@@ -135,13 +135,13 @@ class Shield(AbstractTBMComponent):
                     groupPhrase='"__Shield__"',
                     rangePhrase=generateRangePhrase(
                         ypos=y_Bound,
-                        id=self._id
+                        id=self.eid
                     )
                 )
             )
-        if self.model.modelType == gc.ModelType.half_Model:
+        if self.modelUtil.modelType == gc.ModelType.half_Model:
             # it.command(
-            #     'structure node fix velocity-x rotation-y rotation-z range id ' + str(self._id) \
+            #     'structure node fix velocity-x rotation-y rotation-z range id ' + str(self.eid) \
             #     + ' group "__Shield__" position-x 0 position-y ' \
             #     + str(y_Bound[0] - 100 * gc.param['geom_tol']) + ' ' + str(y_Bound[1] + 100 * gc.param['geom_tol'])
             # )
@@ -152,7 +152,7 @@ class Shield(AbstractTBMComponent):
                     rangePhrase=generateRangePhrase(
                         xpos=0,
                         ypos=y_Bound,
-                        id=self._id
+                        id=self.eid
                     )
                 )
             )
@@ -160,7 +160,7 @@ class Shield(AbstractTBMComponent):
     @y_Bound_Detect('y_Bound')
     def removeShield_Coord(self, y_Bound):
         # it.command(
-        #     'structure liner delete range id ' + str(self._id) \
+        #     'structure liner delete range id ' + str(self.eid) \
         #     + ' group "__Shield__" position-y ' \
         #     + str(y_Bound[0] - 100 * gc.param['geom_tol']) + ' ' + str(y_Bound[1] + 100 * gc.param['geom_tol'])
         # )
@@ -169,7 +169,7 @@ class Shield(AbstractTBMComponent):
                 groupPhrase='"__Shield__"',
                 rangePhrase=generateRangePhrase(
                     ypos=y_Bound,
-                    id=self._id
+                    id=self.eid
                 )
             )
         )

@@ -9,7 +9,7 @@ __all__ = ['parameters', 'ModelType']
 
 parameters = {
     'geom_tol': 1e-3,
-    'id_base_offset': 900
+    'eid_base_offset': 900
 }
 
 param = parameters

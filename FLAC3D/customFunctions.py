@@ -118,7 +118,7 @@ def generateRangePhrase(xpos=None, ypos=None, zpos=None, cyl=None, id=None):
     if id is not None:
         if type(id) is int:
             rangeElementList.append(
-                'id {_id}'.format(_id=id)
+                'id {id}'.format(id=id)
             )
         else:
             raise ValueError

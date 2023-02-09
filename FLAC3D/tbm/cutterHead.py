@@ -11,11 +11,11 @@ from .. import globalContainer as gc
 __all__ = ['CutterHead']
 
 class CutterHead(AbstractTBMComponent):
-    base_ID = gc.param['id_base_offset'] + 98
-    def __init__(self, groupList, origin, diameter, cutterHeight, frictionCoef, propertyDict, _id, tbmUtil):
-        if _id == 'default':
-            _id = CutterHead.base_ID
-        super(CutterHead, self).__init__(groupList, propertyDict, _id, tbmUtil)
+    base_eid = gc.param['eid_base_offset'] + 98
+    def __init__(self, groupList, origin, diameter, cutterHeight, frictionCoef, propertyDict, eid, util):
+        if eid == 'default':
+            eid = CutterHead.base_eid
+        super(CutterHead, self).__init__(groupList, propertyDict, eid, util)
         self.cutterHeight = cutterHeight
         self.frictionCoef = frictionCoef
         self.__origin = origin
@@ -94,50 +94,50 @@ class CutterHead(AbstractTBMComponent):
     def restoreExcaFaceGridpoints(state):
         state['excaFaceGridpoints'] = []
         for _group in state['excaFaceGridpoints_ID']:
-            state['excaFaceGridpoints'].append([it.gridpoint.find(_id) for _id in _group])
+            state['excaFaceGridpoints'].append([it.gridpoint.find(id) for id in _group])
         state.pop('excaFaceGridpoints_ID')
 
-    def applyCutterHead(self, y_):
+    def applyCutterHead(self, y_Coord):
         # it.command(
-        #     'structure liner create by-face id ' + str(self._id) \
+        #     'structure liner create by-face id ' + str(self.eid) \
         #     + ' group "__CutterHead__" slot "__TBMUtil__" range group ' \
         #     + generateGroupRangePhrase(self.groupList) + ' cylinder end-1 ' \
-        #     + str(self.origin[0]) + ' ' + str(y_ - 100 * gc.param['geom_tol'])\
+        #     + str(self.origin[0]) + ' ' + str(y_Coord - 100 * gc.param['geom_tol'])\
         #     + ' ' + str(self.origin[1]) + ' end-2 ' + str(self.origin[0])\
-        #     + ' ' + str(y_ + 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1])\
+        #     + ' ' + str(y_Coord + 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1])\
         #     + ' radius ' + str(self.radius)
         # )
         it.command(
-            'structure liner create by-face id {_id} group {sourceGroup} slot {sourceSlot} '.format(
-                _id=self._id,
+            'structure liner create by-face id {id} group {sourceGroup} slot {sourceSlot} '.format(
+                id=self.eid,
                 sourceGroup='"__CutterHead__"',
                 sourceSlot='"__TBMUtil__"'
             ) + 'range group {groupPhrase} {rangePhrase}'.format(
                 groupPhrase=generateGroupRangePhrase(self.groupList),
                 rangePhrase=generateRangePhrase(cyl=(
-                    (self.origin[0], y_ - gc.param['geom_tol'], self.origin[1]),
-                    (self.origin[0], y_ + gc.param['geom_tol'], self.origin[1]),
+                    (self.origin[0], y_Coord - gc.param['geom_tol'], self.origin[1]),
+                    (self.origin[0], y_Coord + gc.param['geom_tol'], self.origin[1]),
                     self.radius
                 ))
             )
         )
         # it.command(
         #     'structure liner property ' + generatePropertyPhrase(self.propertyDict) \
-        #     + ' range id ' + str(self._id) + ' group "__CutterHead__" position-y ' \
-        #     + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(y_ + 100 * gc.param['geom_tol'])
+        #     + ' range id ' + str(self.eid) + ' group "__CutterHead__" position-y ' \
+        #     + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
         # )
         it.command(
             'structure liner property {propertyPhrase} range group {groupPhrase} {rangePhrase}'.format(
                 propertyPhrase=generatePropertyPhrase(self.propertyDict),
                 groupPhrase='"__CutterHead__"',
-                rangePhrase=generateRangePhrase(ypos=y_, id=self._id)
+                rangePhrase=generateRangePhrase(ypos=y_Coord, id=self.eid)
             )
         )
         # it.command(
         #     'structure node fix velocity-x velocity-y velocity-z rotation-x rotation-y rotation-z range id '\
-        #     + str(self._id) + ' group "__CutterHead__" cylinder end-1 ' \
-        #     + str(self.origin[0]) + ' ' + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1]) + ' end-2 ' \
-        #     + str(self.origin[0]) + ' ' + str(y_ + 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1]) + \
+        #     + str(self.eid) + ' group "__CutterHead__" cylinder end-1 ' \
+        #     + str(self.origin[0]) + ' ' + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1]) + ' end-2 ' \
+        #     + str(self.origin[0]) + ' ' + str(y_Coord + 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1]) + \
         #     ' radius ' + str(self.radius - 100 * gc.param['geom_tol']) + ' ' + str(self.radius + 100 * gc.param['geom_tol'])
         # )
         it.command(
@@ -146,49 +146,49 @@ class CutterHead(AbstractTBMComponent):
                 groupPhrase='"__CutterHead__"',
                 rangePhrase=generateRangePhrase(
                     cyl=(
-                        (self.origin[0], y_ - gc.param['geom_tol'], self.origin[1]),
-                        (self.origin[0], y_ + gc.param['geom_tol'], self.origin[1]),
+                        (self.origin[0], y_Coord - gc.param['geom_tol'], self.origin[1]),
+                        (self.origin[0], y_Coord + gc.param['geom_tol'], self.origin[1]),
                         (self.radius, self.radius)
                     ),
-                    id=self._id
+                    id=self.eid
                 )
             )
         )
         if self.cutterHeight > 0:
             # it.command(
-            #     'structure link delete range id ' + str(self._id) + ' group "__CutterHead__" position-y ' \
-            #     + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(y_ + 100 * gc.param['geom_tol'])
+            #     'structure link delete range id ' + str(self.eid) + ' group "__CutterHead__" position-y ' \
+            #     + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
             # )
             it.command(
                 'structure link delete range group {groupPhrase} {rangePhrase}'.format(
                     groupPhrase='"__CutterHead__"',
-                    rangePhrase=generateRangePhrase(ypos=y_, id=self._id)
+                    rangePhrase=generateRangePhrase(ypos=y_Coord, id=self.eid)
                 )
             )
         if self.model.modelType == gc.ModelType.half_Model:
             # it.command(
-            #     'structure node fix velocity-x rotation-y rotation-z range id ' + str(self._id) \
+            #     'structure node fix velocity-x rotation-y rotation-z range id ' + str(self.eid) \
             #     + ' group "__CutterHead__" position-x 0 position-y ' \
-            #     + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(y_ + 100 * gc.param['geom_tol'])
+            #     + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
             # )
             it.command(
                 'structure node fix {fixityPhrase} range group {groupPhrase} {rangePhrase}'.format(
                     fixityPhrase=generateFixityPhrase(mode='X_Symm_Node'),
                     groupPhrase='"__CutterHead__"',
-                    rangePhrase=generateRangePhrase(xpos=0, ypos=y_, id=self._id)
+                    rangePhrase=generateRangePhrase(xpos=0, ypos=y_Coord, id=self.eid)
                 )
             )
 
-    def removeCutterHead(self, y_):
+    def removeCutterHead(self, y_Coord):
         # it.command(
-        #     'structure liner delete range id ' + str(self._id) \
+        #     'structure liner delete range id ' + str(self.eid) \
         #     + ' group "__CutterHead__" position-y ' \
-        #     + str(y_ - 100 * gc.param['geom_tol']) + ' ' + str(y_ + 100 * gc.param['geom_tol'])
+        #     + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
         # )
         it.command(
             'structure liner delete range group {groupPhrase} {rangePhrase}'.format(
                 groupPhrase='"__CutterHead__"',
-                rangePhrase=generateRangePhrase(ypos=y_, id=self._id)
+                rangePhrase=generateRangePhrase(ypos=y_Coord, id=self.eid)
             )
         )
 

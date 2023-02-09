@@ -34,37 +34,41 @@ class GridPointUtility(AbstractSubUtility):
 
     @property
     def bounding(self):
-        x_, y_, z_ = self.pos.T
-        return np.array([[x_.min(), x_.max()], [y_.min(), y_.max()], [z_.min(), z_.max()]])
+        x_Coord, y_Coord, z_Coord = self.pos.T
+        return np.array([
+            [x_Coord.min(), x_Coord.max()],
+            [y_Coord.min(), y_Coord.max()],
+            [z_Coord.min(), z_Coord.max()]
+        ])
 
     @property
     def bounding_x(self):
-        x_ = self.pos_x
-        return np.array([x_.min(), x_.max()])
+        x_Coord = self.pos_x
+        return np.array([x_Coord.min(), x_Coord.max()])
 
     @property
     def bounding_y(self):
-        y_ = self.pos_y
-        return np.array([y_.min(), y_.max()])
+        y_Coord = self.pos_y
+        return np.array([y_Coord.min(), y_Coord.max()])
 
     @property
     def bounding_z(self):
-        z_ = self.pos_z
-        return np.array([z_.min(), z_.max()])
+        z_Coord = self.pos_z
+        return np.array([z_Coord.min(), z_Coord.max()])
 
     def fixBoundary(self):
         '''
         自动对模型赋予基本的静力计算边界条件。
         即x、y向边界约束相应的平动自由度，z负向（模型底）完全约束，z正向自由
         '''
-        x_, y_, z_ = self.pos.T
+        x_Coord, y_Coord, z_Coord = self.pos.T
         bounding = self.bounding
-        xPosMask = abs(x_ - bounding[0][1]) < gc.param['geom_tol']
-        xNegMast = abs(x_ - bounding[0][0]) < gc.param['geom_tol']
-        yPosMask = abs(y_ - bounding[1][1]) < gc.param['geom_tol']
-        yNegMask = abs(y_ - bounding[1][0]) < gc.param['geom_tol']
-        zPosMask = abs(z_ - bounding[2][1]) < gc.param['geom_tol']
-        zNegMask = abs(z_ - bounding[2][0]) < gc.param['geom_tol']
+        xPosMask = abs(x_Coord - bounding[0][1]) < gc.param['geom_tol']
+        xNegMast = abs(x_Coord - bounding[0][0]) < gc.param['geom_tol']
+        yPosMask = abs(y_Coord - bounding[1][1]) < gc.param['geom_tol']
+        yNegMask = abs(y_Coord - bounding[1][0]) < gc.param['geom_tol']
+        zPosMask = abs(z_Coord - bounding[2][1]) < gc.param['geom_tol']
+        zNegMask = abs(z_Coord - bounding[2][0]) < gc.param['geom_tol']
         fixity = gpa.fixity()
         fixity[np.logical_or(xPosMask, xNegMast)] = np.logical_or(fixity[np.logical_or(xPosMask, xNegMast)],
                                                                   np.array([True, False, False]))

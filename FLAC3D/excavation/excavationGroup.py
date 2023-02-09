@@ -2,25 +2,31 @@
 import numpy as np
 from ..customDecorators import *
 from ..customFunctions import generateRangePhrase
+from ..model.abstractSubUtility import AbstractSubUtility
 from .. import globalContainer as gc
 
 
 __all__ = ['ExcaGroup']
 
-class ExcaGroup(object):
+
+class ExcaGroup(AbstractSubUtility):
     """
     ExcaGroup是管理开挖动作的单元，与一个MaterialSlot关联以实现在一个开挖步中根据MaterialSlot指定的单元-材料映射关系更改本构及参数。
     与采用MaterialSlot直接赋参不同，ExcaGroup可对MaterialSlot中的部分group进行操作（采用SubSlot方法），并可根据y坐标分段。
     因此，多个ExcaGroup可共用一个MaterialSlot。
     """
     @convert_Group_To_GroupList
-    def __init__(self, y_Bound_Global, groupName_or_List, slotName, excaUtil, _assignModel = True):
-        self.excaUtil = excaUtil
-        self.modelUtil = excaUtil.modelUtil
+    def __init__(self, y_Bound_Global, groupName_or_List, slotName, util, _assignModel = True):
+        super(ExcaGroup, self).__init__(util.modelUtil)
+        self.__util = util
         self.groupList = groupName_or_List
         self.slotName = slotName
         self._assignModel = _assignModel
         self.set_y_Bound_Global(y_Bound_Global)
+
+    @property
+    def util(self):
+        return self.__util
 
     @y_Bound_Detect('y_Bound_Global')
     def set_y_Bound_Global(self, y_Bound_Global):

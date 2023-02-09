@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import itasca as it
-from ..bolt.bolt import BoltRingInstance
+
 
 __all__ = ['ModelEntityManager']
 
 
-class ModelEntityManager:
+class ModelEntityManager(object):
     _instance = None
     def __new__(cls, new=False, *args, **kw):
         '''
@@ -16,50 +16,119 @@ class ModelEntityManager:
         return cls._instance
 
     def __init__(self, model):
-        self.Node = NodeManager(self)
-        self.Element = ElementManager(self)
-        self.Link = LinkManager(self)
-        self.modelUtil = model
-        self.archRingEntityList = []
-        self.boltRingEntityList = []
-        self.pileRoofRingEntityList = []
-        self.tbmEntityList = []
+        self.__modelUtil = model
+        self.__nodeManager = NodeManager(self)
+        self.__elementManager = ElementManager(self)
+        self.__linkManager = LinkManager(self)
+        self.__archManager = ArchManager(self)
+        self.__boltManager = BoltManager(self)
+        self.__pileRoofManager = PileRoofManager(self)
+        self.__tbmManager = TBMManager(self)
 
-    def createArchRingInstance(self):
+    @property
+    def modelUtil(self):
+        return self.__modelUtil
+
+    @property
+    def nodeManager(self):
+        return self.__nodeManager
+
+    @property
+    def elementManager(self):
+        return self.__elementManager
+
+    @property
+    def linkManager(self):
+        return self.__linkManager
+
+    @property
+    def archManager(self):
+        return self.__archManager
+
+    @property
+    def boltManager(self):
+        return self.__boltManager
+
+    @property
+    def pileRoofManager(self):
+        return self.__pileRoofManager
+
+    @property
+    def tbmManager(self):
+        return self.__tbmManager
+
+    Model = modelUtil
+    Node = nodeManager
+    Elem = elementManager
+    Link = linkManager
+    Arch = archManager
+    Bolt = boltManager
+    PRoof = pileRoofManager
+    TBM = tbmManager
+
+    def addChind(self):
         pass
-
-    def createBoltRingEntity(self, y_Coord, boltRing):
-        _boltRingInstance = BoltRingInstance(y_Coord, boltRing, self, self)
-        self.boltRingEntityList.append(_boltRingInstance)
-        boltRing._instances.append(_boltRingInstance)
-        return _boltRingInstance
 
 
 class AbstractSubManager(object):
     def __init__(self, manager):
-        self.manager = manager
-        # 由管理对象id至孪生实体对象的映射字典
-        self.mappingDict = {}
-        # 由Itasca cid至孪生实体对象的映射字典
-        self.reverseMappingDict = {}
+        self.__manager = manager
+        self.__modelUtil = manager.modelUtil
 
-    def __call__(self):
-        return self.mappingDict
+    @property
+    def manager(self):
+        return self.__manager
+
+    @property
+    def modelUtil(self):
+        return self.__modelUtil
+
+class AbstractComponentManager(AbstractSubManager):
+    def __init__(self, manager):
+        super(AbstractComponentManager, self).__init__(manager)
+        # 由管理对象id至孪生实体对象的映射字典
+        self.__mappingDict = {}
+        # 由Itasca cid至孪生实体对象的映射字典
+        self.__reverseMappingDict = {}
+
+    def __call__(self, id):
+        return self.get(id)
 
     def add(self, subject):
-        self.mappingDict[subject.ID] = subject
-        self.reverseMappingDict[subject._cid] = subject
+        self.__mappingDict[subject.id] = subject
+        self.__reverseMappingDict[subject.cid] = subject
 
-    def find(self, _cid):
+    def find(self, cid):
         """由给定的Itasca cid，根据反向映射字典返回孪生实体对象"""
-        return self.reverseMappingDict.get(_cid)
+        return self.__reverseMappingDict.get(cid)
+
+    def get(self, id):
+        """由给定的id，根据映射字典返回孪生实体对象"""
+        return self.__mappingDict.get(id)
 
     def list(self):
         """Itasca自带list()接口的类比，返回由manager管理的所有孪生实体对象构成的迭代器"""
-        return iter(self.mappingDict.values())
+        return iter(self.__mappingDict.values())
 
 
-class NodeManager(AbstractSubManager):
+class AbstractStructureManager(AbstractSubManager):
+    def __init__(self, manager):
+        super(AbstractStructureManager, self).__init__(manager)
+        self.__instances = []
+
+    @property
+    def instances(self):
+        return self.__instances
+
+    def add(self, instance):
+        self.instances.append(instance)
+
+    addChild = add
+
+    def count(self):
+        return len(self.__instances)
+
+class NodeManager(AbstractComponentManager):
     def near(self, coord):
         """
         根据坐标搜索对象并返回孪生实体对象（节点）
@@ -78,7 +147,7 @@ class NodeManager(AbstractSubManager):
         return it.structure.node.maxid()
 
 
-class ElementManager(AbstractSubManager):
+class ElementManager(AbstractComponentManager):
     def near(self, coord):
         """
         根据坐标搜索对象并返回孪生实体对象（单元）
@@ -97,7 +166,7 @@ class ElementManager(AbstractSubManager):
         return it.structure.maxid()
 
 
-class LinkManager(AbstractSubManager):
+class LinkManager(AbstractComponentManager):
     @classmethod
     def count(cls):
         """Itasca自带接口的副本"""
@@ -108,3 +177,22 @@ class LinkManager(AbstractSubManager):
         """Itasca自带接口的副本"""
         return it.structure.link.maxid()
 
+
+class ArchManager(AbstractStructureManager):
+    def __init__(self, manager):
+        super(ArchManager, self).__init__(manager)
+
+
+class BoltManager(AbstractStructureManager):
+    def __init__(self, manager):
+        super(BoltManager, self).__init__(manager)
+
+
+class PileRoofManager(AbstractStructureManager):
+    def __init__(self, manager):
+        super(PileRoofManager, self).__init__(manager)
+
+
+class TBMManager(AbstractStructureManager):
+    def __init__(self, manager):
+        super(TBMManager, self).__init__(manager)

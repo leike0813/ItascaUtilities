@@ -2,24 +2,30 @@
 import itasca as it
 from ..customDecorators import *
 from ..customFunctions import generateGroupRangePhrase, generatePropertyPhrase
+from ..model.abstractSubUtility import AbstractSubUtility
 from .. import globalContainer as gc
 
 
 __all__ = ['MaterialSlot']
 
-class MaterialSlot(object):
+
+class MaterialSlot(AbstractSubUtility):
     """
     MaterialSlot管理模型group和MaterialUtil实例中各Material名称的映射关系。
     MaterialSlot中的slot名可与FLAC3D模型中的slot名不同，但建议取为相同slot名以实现自动映射功能。
     关键私有属性：mappingDict：记录group名称:material名称的映射关系，一对一；
                rangeMappingDict：记录material名称：group名称的映射关系，一对多。
     """
-    def __init__(self, slotName, zoneUtil):
+    def __init__(self, slotName, util): # MaterialSlot对应的是ZoneUtil
+        super(MaterialSlot, self).__init__(util.modelUtil)
         self.slotName = slotName
-        self.zoneUtil = zoneUtil
-        self.modelUtil = zoneUtil.modelUtil
+        self.__util = util
         self.__mappingDict = dict()
         self.__rangeMappingDict = dict()
+
+    @property
+    def util(self):
+        return self.__util
 
     @property
     def mappingDict(self):
@@ -153,7 +159,7 @@ class MaterialSlot(object):
                     self.map_Material_To_Group(_name, _name)
 
     def getSubSlot(self, groupList):
-        materialSlot = MaterialSlot(self.slotName + '_SubSlot', self.zoneUtil)
+        materialSlot = MaterialSlot(self.slotName + '_SubSlot', self.util)
         for gr in groupList:
             materialSlot.map_Material_To_Group(self.mappingDict[gr], gr)
         return materialSlot

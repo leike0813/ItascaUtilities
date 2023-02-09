@@ -3,40 +3,40 @@ import itasca as it
 import numpy as np
 import math
 from ..customFunctions import generateRangePhrase, generateFixityPhrase
+from ..model.abstractGroup import AbstractGroup, AbstractGroup_Instance
 from .. import globalContainer as gc
 
 
 __all__ = ['ArchGroup', 'ArchGroup_Direct']
 
 
-class ArchGroup_Abstract(object):
+class ArchGroup_Abstract(AbstractGroup):
     """ArchGroup抽象基类"""
-    def __init__(self, archRing):
-        self.archRing = archRing
-        self.archUtil = archRing.archUtil
-        self.modelUtil = archRing.modelUtil
+    def __init__(self, ring):
+        super(ArchGroup_Abstract, self).__init__(ring.eid, ring, ArchGroup_Instance)
+        self.instantiate_Param_List = ['eid']
 
-    def applyArch_Group(self, y_):
+    def applyArch_Group(self, y_Coord):
         """
         20220325:*由于ArchGroup之间需要连接，故拱架的施加由ArchRing统一调度，此函数几乎不会被调用，保留以备用。
                   考虑多段钢架可能并非同时施加，且分段施加的钢架间需进行连接，ArchGroup的施加逻辑还需进一步细化。
         """
         for i in range(self.n_Line):
-            self.archUtil.applyArch_ByLine(
-                [self.nodeCoord[i][0], y_, self.nodeCoord[i][1]],
-                [self.nodeCoord[i + 1][0], y_, self.nodeCoord[i + 1][1]],
-                self.archRing.n_Seg,
-                self.archRing._id
+            self.util.applyArch_ByLine(
+                [self.nodeCoord[i][0], y_Coord, self.nodeCoord[i][1]],
+                [self.nodeCoord[i + 1][0], y_Coord, self.nodeCoord[i + 1][1]],
+                self.ring.n_Seg,
+                self.ring.eid
             )
 
-    def fixNodes_X_Symmetry(self, y_):
+    def fixNodes_X_Symmetry(self, y_Coord):
         """
         20220325:*由于ArchGroup之间需要连接，故拱架的施加由ArchRing统一调度，此函数几乎不会被调用，保留以备用。
         """
         it.command(
             'structure node fix {fixityPhrase} range {rangePhrase}'.format(
                 fixityPhrase=generateFixityPhrase(mode='X_Symm_Node'),
-                rangePhrase=generateRangePhrase(xpos=0, ypos=y_, id=self.archRing._id)
+                rangePhrase=generateRangePhrase(xpos=0, ypos=y_Coord, id=self.ring.eid)
             )
         )
 
@@ -46,43 +46,99 @@ class ArchGroup(ArchGroup_Abstract):
     ArchGroup是拱架管理的基本单位，代表一环拱架中的一段。
     ArchGroup的参数有角度范围（angle_Bound）、原点（origin）、半径（radius）和分段数（n_Line）。
     """
-    def __init__(self, angle_Bound, n_Line, origin, radius, archRing):
-        super(ArchGroup, self).__init__(archRing)
-        self.angle_Bound = angle_Bound
-        self.origin = origin
-        self.radius = radius
-        self.n_Line = n_Line
+    def __init__(self, angle_Bound, n_Line, origin, radius, ring):
+        super(ArchGroup, self).__init__(ring)
+        self.__angle_Bound = angle_Bound
+        self.__origin = origin
+        self.__radius = radius
+        self.__n_Line = n_Line
+        self.calculateNodeCoord()
+
+    def registerInstance(self, instance):
+        _paramDict = {
+            'type': 'normal',
+            'archRing': self.ring,
+            'nodeCoord': self.nodeCoord,
+            'angle_Bound': self.angle_Bound,
+            'origin': self.origin,
+            'radius': self.radius,
+            'n_Line': self.n_Line,
+            'angle_Spacing': self.angle_Spacing
+        }
+        instance.update_Param(_paramDict)
+
+    @property
+    def angle_Bound(self):
+        return self.__angle_Bound
+
+    @angle_Bound.setter
+    def angle_Bound(self, value):
+        self.__angle_Bound = value
+        self.calculateNodeCoord()
+
+    @property
+    def origin(self):
+        return self.__origin
+
+    @origin.setter
+    def origin(self, value):
+        self.__origin = value
+        self.calculateNodeCoord()
+
+    @property
+    def radius(self):
+        return self.__radius
+
+    @radius.setter
+    def radius(self, value):
+        self.__radius = value
+        self.calculateNodeCoord()
+
+    @property
+    def n_Line(self):
+        return self.__n_Line
+
+    @n_Line.setter
+    def n_Line(self, value):
+        self.__n_Line = value
+        self.calculateNodeCoord()
+
+    @property
+    def angle_Spacing(self):
+        return self.__angle_Spacing
+
+    def calculateNodeCoord(self):
         # 计算角度间隔
-        self.angle_Spacing = (self.angle_Bound[1] - self.angle_Bound[0]) / self.n_Line
+        self.__angle_Spacing = (self.angle_Bound[1] - self.angle_Bound[0]) / self.n_Line
         # 计算xOz平面上的节点坐标
-        self.nodeCoord = np.array(
+        self.setNodeCoord(np.array(
             [
                 (
                     self.origin[0] + self.radius * math.sin(math.radians(self.angle_Bound[0] + i * self.angle_Spacing)),
                     self.origin[1] + self.radius * math.cos(math.radians(self.angle_Bound[0] + i * self.angle_Spacing))
                 ) for i in range(self.n_Line + 1)
             ]
-        )
+        ))
 
-    def applyArch_Group(self, y_):
+    def applyArch_Group(self, y_Coord):
         """
         20220325:*由于ArchGroup之间需要连接，故拱架的施加由ArchRing统一调度，此函数几乎不会被调用，保留以备用。
         """
-        super(ArchGroup, self).applyArch_Group(y_)
+        super(ArchGroup, self).applyArch_Group(y_Coord)
         if self.modelUtil.modelType == gc.ModelType.half_Model and \
                 (min(self.angle_Bound) <= 0 or max(self.angle_Bound) >= 180):
             # 若模型为对称模型，且该ArchGroup的边界与对称面相交，则施加对称约束
             # it.command(
             #     'structure node fix velocity-x rotation-y rotation-z range position-x 0 position-y ' \
-            #     + str(y_ - gc.param['geom_tol']) + ' ' + str(y_ + gc.param['geom_tol']) + ' id ' + str(self.archRing._id)
+            #     + str(y_Coord - gc.param['geom_tol']) + ' ' + str(y_Coord + gc.param['geom_tol']) + ' id ' + str(self.ring.eid)
             # )
             # it.command(
             #     'structure node fix {fixityPhrase} range {rangePhrase}'.format(
             #         fixityPhrase=generateFixityPhrase(mode='X_Symm_Node'),
-            #         rangePhrase=generateRangePhrase(xpos=0, ypos=y_, id=self.archRing._id)
+            #         rangePhrase=generateRangePhrase(xpos=0, ypos=y_Coord, id=self.ring.eid)
             #     )
             # )
-            super(ArchGroup, self).fixNodes_X_Symmetry(y_)
+            super(ArchGroup, self).fixNodes_X_Symmetry(y_Coord)
 
 
 class ArchGroup_Direct(ArchGroup_Abstract):
@@ -93,10 +149,24 @@ class ArchGroup_Direct(ArchGroup_Abstract):
     当对称性标志（_symmetry）为True时，添加锚杆后自动在x=0平面施加对称约束。
     """
 
-    def __init__(self, nodeCoord, _symmetry, archRing):
-        super(ArchGroup_Direct, self).__init__(archRing)
-        self.nodeCoord = nodeCoord
+    def __init__(self, nodeCoord, _symmetry, ring):
+        super(ArchGroup_Direct, self).__init__(ring)
+        self.setNodeCoord(nodeCoord)
         self._symmetry = _symmetry and self.modelUtil.modelType == gc.ModelType.full_Model  # _symmety标志仅在全模型时生效
+        self.instantiate_Param_List.append('_symmetry')
+
+    def registerInstance(self, instance):
+        _paramDict = {
+            'type': 'direct',
+            'archRing': self.ring,
+            'nodeCoord': self.nodeCoord,
+            'n_Line': self.n_Line
+        }
+        instance.update_Param(_paramDict)
+
+    @property
+    def n_Line(self):
+        return len(self.nodeCoord)
 
     def getArchGPCoordAndSort(self, groupName1, groupName2):
         """
@@ -142,32 +212,29 @@ class ArchGroup_Direct(ArchGroup_Abstract):
                 # 若排序后的x>=0部分的第一个节点为x=0，说明该ArchGroup在下方首尾相接，需要在合并后的节点坐标数组末端再添加一次第一个节点。
                 # 反之则不需要
                 if abs(archGPCoord_Pos[0, 0]) < gc.param['geom_tol']:
-                    self.nodeCoord = np.vstack((archGPCoord_Pos, archGPCoord_Neg, archGPCoord_Pos[0, :]))
+                    self.__nodeCoord = np.vstack((archGPCoord_Pos, archGPCoord_Neg, archGPCoord_Pos[0, :]))
                 else:
-                    self.nodeCoord = np.vstack((archGPCoord_Pos, archGPCoord_Neg))
+                    self.__nodeCoord = np.vstack((archGPCoord_Pos, archGPCoord_Neg))
                 return
         # 对应于半模型或全模型+_symmetry标志开的情况
         # 删除y坐标
         archGPCoord = np.delete(archGPCoord, 1, axis=1)
         # 排序
-        self.nodeCoord = archGPCoord[np.argsort(archGPCoord[:, 1])]
-        self.archRing.calculateNodeCoord()
+        self.setNodeCoord(archGPCoord[np.argsort(archGPCoord[:, 1])])
 
-    def applyArch_Group(self, y_):
+    def applyArch_Group(self, y_Coord):
         """
         20220325:*由于ArchGroup之间需要连接，故拱架的施加由ArchRing统一调度，此函数几乎不会被调用，保留以备用。
         """
-        super(ArchGroup_Direct, self).applyArch_Group(y_)
+        super(ArchGroup_Direct, self).applyArch_Group(y_Coord)
         if self.modelUtil.modelType == gc.ModelType.half_Model:
             # 若模型为对称模型，则施加对称约束
-            # it.command(
-            #     'structure node fix velocity-x rotation-y rotation-z range position-x 0 position-y ' \
-            #     + str(y_ - gc.param['geom_tol']) + ' ' + str(y_ + gc.param['geom_tol']) + ' id ' + str(self.archRing._id)
-            # )
-            # it.command(
-            #     'structure node fix {fixityPhrase} range {rangePhrase}'.format(
-            #         fixityPhrase=generateFixityPhrase(mode='X_Symm_Node'),
-            #         rangePhrase=generateRangePhrase(xpos=0, ypos=y_, id=self.archRing._id)
-            #     )
-            # )
-            super(ArchGroup_Direct, self).fixNodes_X_Symmetry(y_)
+            super(ArchGroup_Direct, self).fixNodes_X_Symmetry(y_Coord)
+
+
+class ArchGroup_Instance(AbstractGroup_Instance):
+    def __init__(self, y_Coord, parent, generator, manager):
+        super(ArchGroup_Instance, self).__init__(y_Coord, parent, generator, manager)
+
+    def __repr__(self):
+        return 'Arch group instance at Y={y_Coord}'.format(y_Coord=self.y_Coord)

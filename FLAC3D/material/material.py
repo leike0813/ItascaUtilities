@@ -7,6 +7,7 @@ from .. import globalContainer as gc
 
 __all__ = ['Material']
 
+
 class Material(object):
     """
     Material是管理实体单元本构模型及参数的容器。
@@ -18,8 +19,8 @@ class Material(object):
     groupTupleList指定时，不检查其合法性（复数同名group同时从属于不同slot在FLAC3D中是不可能的）。
     未来将添加参数名称及必要参数校验功能。
     """
-    def __init__(self, name, cModel, propertyDict, materialUtil, groupTupleList = []):
-        self.materialUtil = materialUtil
+    def __init__(self, name, cModel, propertyDict, util, groupTupleList = []):
+        self.__util = util
         self.name = name
         self.groupTupleList = groupTupleList
         self.__cModel = cModel
@@ -27,6 +28,10 @@ class Material(object):
 
     def __repr__(self):
         return 'Material: ' + self.name
+
+    @property
+    def util(self):
+        return self.__util
 
     @property
     def cModel(self):

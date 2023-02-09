@@ -32,15 +32,15 @@ class ModelUtility(object):
 
     def __init__(self, type_ = gc.ModelType.full_Model, new = False):
         self.__type = type_
-        self.gpUtil = GridPointUtility(self)
-        self.zoneUtil = ZoneUtility(self)
-        self.materialUtil = MaterialUtility(self)
-        self.archUtil = ArchUtility(self)
-        self.boltUtil = BoltUtility(self)
-        self.pileRoofUtil = PileRoofUtility(self)
-        self.excaUtil = ExcavationUtility(self)
-        self.tbmUtil = TBMUtility(self)
-        self.entityManager = ModelEntityManager(self)
+        self.__gpUtil = GridPointUtility(self)
+        self.__zoneUtil = ZoneUtility(self)
+        self.__materialUtil = MaterialUtility(self)
+        self.__archUtil = ArchUtility(self)
+        self.__boltUtil = BoltUtility(self)
+        self.__pileRoofUtil = PileRoofUtility(self)
+        self.__excaUtil = ExcavationUtility(self)
+        self.__tbmUtil = TBMUtility(self)
+        self.__entityManager = ModelEntityManager(self)
 
     def save(self):
         """已弃用"""
@@ -54,6 +54,52 @@ class ModelUtility(object):
         # if ModelUtility._instance is None:
         #     ModelUtility._instance = dill.loads(it.fish.get('__ModelUtility__'))
         return ModelUtility._instance
+
+    @property
+    def gpUtil(self):
+        return self.__gpUtil
+
+    @property
+    def zoneUtil(self):
+        return self.__zoneUtil
+
+    @property
+    def materialUtil(self):
+        return self.__materialUtil
+
+    @property
+    def archUtil(self):
+        return self.__archUtil
+
+    @property
+    def boltUtil(self):
+        return self.__boltUtil
+
+    @property
+    def pileRoofUtil(self):
+        return self.__pileRoofUtil
+
+    @property
+    def excaUtil(self):
+        return self.__excaUtil
+
+    @property
+    def tbmUtil(self):
+        return self.__tbmUtil
+
+    @property
+    def entityManager(self):
+        return self.__entityManager
+
+    GP = gpUtil
+    Zone = zoneUtil
+    Mat = materialUtil
+    Arch = archUtil
+    Bolt = boltUtil
+    PRoof = pileRoofUtil
+    Exca = excaUtil
+    TBM = tbmUtil
+    manager = entityManager
 
     @property
     def modelType(self):

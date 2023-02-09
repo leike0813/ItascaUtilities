@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
+from ..model.abstractSubUtility import AbstractSubUtility
+
 
 __all__ = ['AbstractTBMComponent']
 
-class AbstractTBMComponent(object):
+
+class AbstractTBMComponent(AbstractSubUtility):
     '''
     TBM组件的抽象基类
     '''
-    def __init__(self, groupList, propertyDict, _id, tbmUtil):
-        self.tbmUtil = tbmUtil
-        self.modelUtil = tbmUtil.modelUtil
+    def __init__(self, groupList, propertyDict, eid, util):
+        super(AbstractTBMComponent, self).__init__(util.modelUtil)
+        self.__util = util
         self.groupList = groupList
-        self._id = _id
+        self.eid = eid
         self.propertyDict = propertyDict
+
+    @property
+    def util(self):
+        return self.__util
