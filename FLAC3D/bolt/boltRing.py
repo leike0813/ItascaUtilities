@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import itasca as it
 import numpy as np
-import types
-from ..customDecorators import *
 from ..customFunctions import generatePropertyPhrase, generateRangePhrase
-from ..model.abstractRing import AbstractRing, AbstractRing_Instance
+from ..structuralComponent.abstractRing import AbstractRing, AbstractRing_Instance
 from boltGroup import *
 from .. import globalContainer as gc
 

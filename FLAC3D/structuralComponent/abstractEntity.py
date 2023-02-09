@@ -3,7 +3,6 @@
 __all__ = ['AbstractEntity']
 
 
-#class AbstractEntity(object):
 class AbstractEntity(object):
     def __init__(self, parent, generator, manager):
         self.__parent = parent

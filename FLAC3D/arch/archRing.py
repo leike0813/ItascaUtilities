@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import itasca as it
 import numpy as np
-from ..customDecorators import *
 from ..customFunctions import generatePropertyPhrase, generateRangePhrase, generateFixityPhrase
-from ..model.abstractRing import AbstractRing, AbstractRing_Instance
+from ..structuralComponent.abstractRing import AbstractRing, AbstractRing_Instance
 from arch import ArchElement
 from ..structuralComponent.node import Node
 from archGroup import *

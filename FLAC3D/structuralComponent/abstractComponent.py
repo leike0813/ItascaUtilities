@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import itasca as it
-from ..model.abstractEntity import AbstractEntity
+from ..structuralComponent.abstractEntity import AbstractEntity
 
 __all__ = ['AbstractComponent']
 

@@ -3,7 +3,7 @@ import itasca as it
 import numpy as np
 import math
 from ..customFunctions import generateRangePhrase, generateFixityPhrase
-from ..model.abstractGroup import AbstractGroup, AbstractGroup_Instance
+from ..structuralComponent.abstractGroup import AbstractGroup, AbstractGroup_Instance
 from .. import globalContainer as gc
 
 

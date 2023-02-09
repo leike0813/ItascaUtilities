@@ -3,7 +3,7 @@
 import itasca as it
 from ..structuralComponent.node import Node
 from ..structuralComponent.element import Element
-from ..model.abstractEntity import AbstractEntity
+from ..structuralComponent.abstractEntity import AbstractEntity
 
 
 __all__ = ['BoltElement', 'BoltEntity']
