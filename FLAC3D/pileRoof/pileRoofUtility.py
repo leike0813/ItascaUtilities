@@ -49,10 +49,6 @@ class PileRoofUtility(AbstractSubUtility):
                 _found_Node = False
         else:
             _found_Node = False
-        # it.command(
-        #     'structure beam create by-line ' + str(beginPos[0]) + ' ' + str(beginPos[1]) + ' ' + str(beginPos[2]) + ' ' \
-        #     + str(endPos[0]) + ' ' + str(endPos[1]) + ' ' + str(endPos[2]) + ' segments ' + str(n_Seg) + ' id ' + str(eid)
-        # )
         it.command(
             'structure beam create by-line {positionPhrase} segments {_nseg} id {id}'.format(
                 positionPhrase='{x0} {y0} {z0} {x1} {y1} {z1}'.format(
@@ -65,14 +61,6 @@ class PileRoofUtility(AbstractSubUtility):
         )
         if _found_Node:
             pile_node = it.structure.node.near(beginPos)
-            # it.command(
-            #     'structure link delete range id ' + str(id) \
-            #     + ' position-x ' + str(beginPos[0]) + ' position-y ' + str(beginPos[1]) + ' position-z ' + str(beginPos[2])
-            # )
-            # it.command(
-            #     'structure link create on-nodeid ' + str(pile_node.component_id()) \
-            #     + ' target node ' + str(arch_node_id)
-            # )
             it.command(
                 'structure link delete range {rangePhrase}'.format(
                     rangePhrase=generateRangePhrase(
@@ -90,10 +78,6 @@ class PileRoofUtility(AbstractSubUtility):
                 )
             )
         else:
-            # it.command(
-            #     'structure node fix velocity-x velocity-y velocity-z rotation-x rotation-y rotation-z range id ' \
-            #     + str(id) + ' position-x ' + str(beginPos[0]) + ' position-y ' + str(beginPos[1]) + ' position-z ' + str(beginPos[2])
-            # )
             it.command(
                 'structure node fix {fixityPhrase} range {rangePhrase}'.format(
                     fixityPhrase=generateFixityPhrase(mode='Encastre'),
@@ -107,14 +91,14 @@ class PileRoofUtility(AbstractSubUtility):
             )
 
     @y_Bound_Detect('y_Bound')
-    def applyPileRoof_YRange(self, y_Bound):
+    def applyPileRoof_YRange(self, y_Bound, groups='All'):
         for pr_r in self.__pileRoofRingList:
-            pr_r.applyPileRoof_YRange_Ring(y_Bound)
+            pr_r.applyPileRoof_YRange_Ring(y_Bound, groups)
 
     @n_Step_Detect
-    def applyPileRoof_Step(self, n_Step):
+    def applyPileRoof_Step(self, n_Step, groups='All'):
         for pr_r in self.__pileRoofRingList:
-            pr_r.applyPileRoof_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step])
+            pr_r.applyPileRoof_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step], groups)
 
     @staticmethod
     def propertyDictGenerator(pile_Diameter, pile_Thickness, steel_Density, steel_Young, grout_Density, grout_Young):

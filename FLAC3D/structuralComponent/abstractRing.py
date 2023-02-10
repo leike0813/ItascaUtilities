@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from collections import Iterable
 from abstractGenerator import AbstractGenerator
 from abstractEntity import AbstractEntity
 from ..customDecorators import *
@@ -16,6 +17,7 @@ class AbstractRing(AbstractGenerator):
         self.__groupList = []
         self.__propertyDict = propertyDict
         self.set_y_Bound_Global(y_Bound_Global)
+        self.instantiate_Param_List.append('eid')
 
     @property
     def id_Tuple(self):
@@ -72,6 +74,26 @@ class AbstractRing(AbstractGenerator):
 
     def calculateNodeCoord(self):
         pass
+
+    def group_Convert(self, _groups):
+        if _groups == 'All':
+            return self.groups
+        elif type(_groups) is int and _groups >= 0 and _groups < self.n_Group:
+            return (self.groups[_groups], )
+        elif isinstance(_groups, Iterable):
+            _numberFlag = True
+            _objectFlag = True
+            for gr in _groups:
+                if not (type(gr) is int and gr >= 0 and gr < self.n_Group):
+                    _numberFlag = False
+                if gr not in self.groups:
+                    _objectFlag = False
+            if _numberFlag:
+                return tuple([self.groups[i] for i in _groups])
+            if _objectFlag:
+                return tuple([i for i in _groups])
+        else:
+            raise ValueError
 
 
 class AbstractRing_Instance(AbstractEntity):

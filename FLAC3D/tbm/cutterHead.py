@@ -12,17 +12,17 @@ __all__ = ['CutterHead']
 
 class CutterHead(AbstractTBMComponent):
     base_eid = gc.param['eid_base_offset'] + 98
-    def __init__(self, groupList, origin, diameter, cutterHeight, frictionCoef, propertyDict, eid, util):
+    def __init__(self, rangeGroups, origin, diameter, cutterHeight, frictionCoef, propertyDict, eid, util):
         if eid == 'default':
             eid = CutterHead.base_eid
-        super(CutterHead, self).__init__(groupList, propertyDict, eid, util)
+        super(CutterHead, self).__init__(rangeGroups, propertyDict, eid, util)
         self.cutterHeight = cutterHeight
         self.frictionCoef = frictionCoef
         self.__origin = origin
         self.__diameter = diameter
         self.excaFaceGridpoints = None
         if self.cutterHeight > 0:
-            self.getExcaFaceGridpoints(groupList)
+            self.getExcaFaceGridpoints(rangeGroups)
             it.set_callback('_update_CutterHeadLink', -1)
 
     def __repr__(self):
@@ -39,15 +39,15 @@ class CutterHead(AbstractTBMComponent):
         self.__dict__.update(state)
         # self.excaFaceGridpoints = None
         # if self.cutterHeight > 0:
-        #     self.getExcaFaceGridpoints(self.groupList)
+        #     self.getExcaFaceGridpoints(self.rangeGroups)
 
     @property
     def origin(self):
-        return self.tbmUtil.origin if self.__origin == None else self.__origin
+        return self.util.origin if self.__origin == None else self.__origin
 
     @property
     def diameter(self):
-        return self.tbmUtil.diameter if self.__diameter == None else self.__diameter
+        return self.util.diameter if self.__diameter == None else self.__diameter
 
     @property
     def radius(self):
@@ -55,7 +55,7 @@ class CutterHead(AbstractTBMComponent):
 
     @property
     def penetration(self):
-        return self.tbmUtil.penetration
+        return self.util.penetration
 
     @property
     def area(self):
@@ -101,7 +101,7 @@ class CutterHead(AbstractTBMComponent):
         # it.command(
         #     'structure liner create by-face id ' + str(self.eid) \
         #     + ' group "__CutterHead__" slot "__TBMUtil__" range group ' \
-        #     + generateGroupRangePhrase(self.groupList) + ' cylinder end-1 ' \
+        #     + generateGroupRangePhrase(self.rangeGroups) + ' cylinder end-1 ' \
         #     + str(self.origin[0]) + ' ' + str(y_Coord - 100 * gc.param['geom_tol'])\
         #     + ' ' + str(self.origin[1]) + ' end-2 ' + str(self.origin[0])\
         #     + ' ' + str(y_Coord + 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1])\
@@ -113,7 +113,7 @@ class CutterHead(AbstractTBMComponent):
                 sourceGroup='"__CutterHead__"',
                 sourceSlot='"__TBMUtil__"'
             ) + 'range group {groupPhrase} {rangePhrase}'.format(
-                groupPhrase=generateGroupRangePhrase(self.groupList),
+                groupPhrase=generateGroupRangePhrase(self.rangeGroups),
                 rangePhrase=generateRangePhrase(cyl=(
                     (self.origin[0], y_Coord - gc.param['geom_tol'], self.origin[1]),
                     (self.origin[0], y_Coord + gc.param['geom_tol'], self.origin[1]),

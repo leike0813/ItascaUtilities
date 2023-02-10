@@ -2,7 +2,7 @@ import itasca as it
 import dill
 import globalContainer
 from model.modelUtility import ModelUtility
-from customDecorators import step_Filter
+from customDecorators import step_Filter, group_Filter
 from customFunctions import *
 
 
@@ -15,6 +15,7 @@ __all__ = [
     '_update_ShieldLink',
     '_update_CutterHeadLink',
     'step_Filter',
+    'group_Filter',
     'generateRangePhrase',
     'generatePropertyPhrase',
     'generateGroupRangePhrase',

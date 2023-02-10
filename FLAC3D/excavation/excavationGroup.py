@@ -19,7 +19,7 @@ class ExcaGroup(AbstractSubUtility):
     def __init__(self, y_Bound_Global, groupName_or_List, slotName, util, _assignModel = True):
         super(ExcaGroup, self).__init__(util.modelUtil)
         self.__util = util
-        self.groupList = groupName_or_List
+        self.rangeGroups = groupName_or_List
         self.slotName = slotName
         self._assignModel = _assignModel
         self.set_y_Bound_Global(y_Bound_Global)
@@ -34,7 +34,7 @@ class ExcaGroup(AbstractSubUtility):
 
     @property
     def subSlot(self):
-        return self.modelUtil.zoneUtil.materialSlots[self.slotName].getSubSlot(self.groupList)
+        return self.modelUtil.zoneUtil.materialSlots[self.slotName].getSubSlot(self.rangeGroups)
 
     @y_Bound_Detect('y_Bound')
     def exca_Coord(self, y_Bound):

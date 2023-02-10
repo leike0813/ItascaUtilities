@@ -11,10 +11,10 @@ __all__ = ['Shield']
 
 class Shield(AbstractTBMComponent):
     base_eid = gc.param['eid_base_offset'] + 99
-    def __init__(self, groupList, origin, diameter, lengthCoef, preserveDisp, frictionCoef, propertyDict, eid, util):
+    def __init__(self, rangeGroups, origin, diameter, lengthCoef, preserveDisp, frictionCoef, propertyDict, eid, util):
         if eid == 'default':
             eid = Shield.base_eid
-        super(Shield, self).__init__(groupList, propertyDict, eid, util)
+        super(Shield, self).__init__(rangeGroups, propertyDict, eid, util)
         self.lengthCoef = lengthCoef
         self.preserveDisp = preserveDisp
         self.frictionCoef = frictionCoef
@@ -22,7 +22,7 @@ class Shield(AbstractTBMComponent):
         self.__diameter = diameter
         self.excaBoundGridpoints = None
         if self.preserveDisp > 0:
-            self.getExcaBoundGridpoints(groupList, self.origin, self.diameter)
+            self.getExcaBoundGridpoints(rangeGroups, self.origin, self.diameter)
             it.set_callback('_update_ShieldLink', -1)
 
     def __repr__(self):
@@ -39,7 +39,7 @@ class Shield(AbstractTBMComponent):
         self.__dict__.update(state)
         # self.excaBoundGridpoints = None
         # if self.preserveDisp > 0:
-        #     self.getExcaBoundGridpoints(self.groupList, self.origin, self.diameter)
+        #     self.getExcaBoundGridpoints(self.rangeGroups, self.origin, self.diameter)
 
     @property
     def origin(self):
@@ -91,7 +91,7 @@ class Shield(AbstractTBMComponent):
         # it.command(
         #     'structure liner create by-face id ' + str(self.eid) \
         #     + ' group "__Shield__" slot "__TBMUtil__" range group ' \
-        #     + generateGroupRangePhrase(self.groupList) + ' cylinder end-1 ' \
+        #     + generateGroupRangePhrase(self.rangeGroups) + ' cylinder end-1 ' \
         #     + str(self.origin[0]) + ' ' + str(y_Bound[0] - 100 * gc.param['geom_tol'])\
         #     + ' ' + str(self.origin[1]) + ' end-2 ' + str(self.origin[0])\
         #     + ' ' + str(y_Bound[1] + 100 * gc.param['geom_tol']) + ' ' + str(self.origin[1])\
@@ -102,7 +102,7 @@ class Shield(AbstractTBMComponent):
                 id=self.eid,
                 sourceGroup='"__Shield__"',
                 sourceSlot='"__TBMUtil__"',
-                groupPhrase=generateGroupRangePhrase(self.groupList),
+                groupPhrase=generateGroupRangePhrase(self.rangeGroups),
                 rangePhrase=generateRangePhrase(cyl=(
                     (self.origin[0], y_Bound[0] - gc.param['geom_tol'], self.origin[1]),
                     (self.origin[0], y_Bound[1] + gc.param['geom_tol'], self.origin[1]),

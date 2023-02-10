@@ -8,12 +8,14 @@ __all__ = ['AbstractGroup', 'AbstractGroup_Instance']
 
 
 class AbstractGroup(AbstractGenerator):
-    def __init__(self, eid, ring, instanceClass):
+    def __init__(self, n_Seg, eid, ring, instanceClass):
         super(AbstractGroup, self).__init__(instanceClass, ring.modelUtil)
+        self.n_Seg = n_Seg
         self.eid = eid
         self.__ring = ring
         self.__id = (eid, ring.sequenceNumber, ring.n_Group + 1)
         self.__nodeCoord = None
+        self.instantiate_Param_List.extend(['eid', 'n_Seg'])
 
     @property
     def id_Tuple(self):
@@ -64,6 +66,10 @@ class AbstractGroup(AbstractGenerator):
             self.__nodeCoord.flags.writeable = False
             self.ring.calculateNodeCoord()
 
+    @property
+    def previousGroup(self):
+        return self.ring.groups[self.sequenceNumber - 2] if self.sequenceNumber > 1 else None
+
 
 class AbstractGroup_Instance(AbstractEntity):
     def __init__(self, y_Coord, parent, generator, manager):
@@ -113,12 +119,20 @@ class AbstractGroup_Instance(AbstractEntity):
         return self.__id[4]
 
     @property
+    def ringNumber(self):
+        return self.__id[3]
+
+    @property
     def nodes(self):
         return tuple(self.__nodeList)
 
     @property
     def elements(self):
         return tuple(self.__elementList)
+
+    @property
+    def previousGroup_Instance(self):
+        return self.parent.children[self.sequenceNumber - 2] if self.sequenceNumber > 1 else None
 
     def addNode(self, node):
         self.__nodeList.append(node)

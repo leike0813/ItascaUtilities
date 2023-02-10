@@ -42,11 +42,11 @@ class MaterialSlot(AbstractSubUtility):
         return self.__rangeMappingDict
 
     @property
-    def n_Groups(self):
+    def n_Group(self):
         return len(self.__mappingDict)
 
     @property
-    def groupList(self):
+    def rangeGroups(self):
         return self.__mappingDict.keys()
 
     @property
@@ -158,9 +158,9 @@ class MaterialSlot(AbstractSubUtility):
                 if _name in modelGroupList:
                     self.map_Material_To_Group(_name, _name)
 
-    def getSubSlot(self, groupList):
+    def getSubSlot(self, rangeGroups):
         materialSlot = MaterialSlot(self.slotName + '_SubSlot', self.util)
-        for gr in groupList:
+        for gr in rangeGroups:
             materialSlot.map_Material_To_Group(self.mappingDict[gr], gr)
         return materialSlot
 

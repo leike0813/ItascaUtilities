@@ -76,15 +76,10 @@ class PileRoofRing(AbstractSubUtility):
         self.__pileRoofGroupList.append(pileRoofGroup)
         return pileRoofGroup
 
-    def applyPileRoof_Single(self, y_Coord, _assignProp = False):
+    def applyPileRoof_Single(self, y_Coord, groups='All', _assignProp = False):
         for pr_gr in self.__pileRoofGroupList:
             pr_gr.applyPileRoof_Group(y_Coord)
         if _assignProp:
-            # it.command(
-            #     'structure beam property ' + generatePropertyPhrase(self.propertyDict) + ' range position-y ' \
-            #     + str(y_Coord - gc.param['geom_tol']) + ' ' + str(y_Coord + self.length_Proj + gc.param['geom_tol']) \
-            #     + ' id ' + str(self.eid)
-            # )
             it.command(
                 'structure beam property {propertyPhrase} range {rangePhrase}'.format(
                     propertyPhrase=generatePropertyPhrase(self.propertyDict),
@@ -92,22 +87,22 @@ class PileRoofRing(AbstractSubUtility):
                 )
             )
 
-    def applyPileRoof_YRange_Ring(self, y_Bound):
+    @y_Bound_Detect('y_Bound')
+    def applyPileRoof_YRange_Ring(self, y_Bound, groups='All'):
         y_Bound = np.clip(y_Bound, self.y_Bound_Global[0], self.y_Bound_Global[1])
         cross_Range = np.array([int((y_Bound[0] - gc.param['geom_tol'] - self.y_Bound_Global[0]) // self.spacing),
                                 int((y_Bound[1] - gc.param['geom_tol'] - self.y_Bound_Global[0]) // self.spacing)])
         n_Cross = cross_Range[1] - cross_Range[0]
         for i in range(n_Cross):
-            self.applyPileRoof_Single((cross_Range[1] - i) * self.spacing + self.y_Bound_Global[0])
+            self.applyPileRoof_Single((cross_Range[0] + i + 1) * self.spacing + self.y_Bound_Global[0], groups)
         if n_Cross > 0:
-            # it.command(
-            #     'structure beam property ' + generatePropertyPhrase(self.propertyDict) + ' range position-y ' \
-            #     + str(y_Bound[0] - gc.param['geom_tol']) + ' ' + str(y_Bound[1] + self.length_Proj + gc.param['geom_tol']) \
-            #     + ' id ' + str(self.eid)
-            # )
             it.command(
                 'structure beam property {propertyPhrase} range {rangePhrase}'.format(
                     propertyPhrase=generatePropertyPhrase(self.propertyDict),
                     rangePhrase=generateRangePhrase(ypos=(y_Bound[0], y_Bound[1] + self.length_Proj), id=self.eid)
                 )
             )
+
+    @n_Step_Detect
+    def applyPileRoof_Step_Ring(self, n_Step, groups='All'):
+        self.applyPileRoof_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step], groups)

@@ -5,7 +5,7 @@ import inspect
 import sys
 
 
-__all__ = ['y_Bound_Detect', 'n_Step_Detect', 'convert_Group_To_GroupList', 'step_Filter']
+__all__ = ['y_Bound_Detect', 'n_Step_Detect', 'convert_Group_To_GroupList', 'step_Filter', 'group_Filter']
 
 def y_Bound_Detect(argName):
     def decorated(meth):
@@ -31,6 +31,12 @@ def n_Step_Detect(meth):
             return dummy_Method(self, *args, **kwargs)
         return meth(self, *args, **kwargs)
     return method_With_n_Step_Detect
+
+def group_Filter(meth, groups):
+    @wraps(meth)
+    def method_With_Group_Filting(self, *args, **kwargs):
+        return meth(self, *args, groups=groups, **kwargs)
+    return method_With_Group_Filting
 
 def convert_Group_To_GroupList(func):
     @wraps(func)

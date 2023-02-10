@@ -14,9 +14,7 @@ __all__ = ['BoltGroup', 'BoltGroup_Direct']
 class BoltGroup_Abstract(AbstractGroup):
     """BoltGroup抽象基类，避免重复代码。"""
     def __init__(self, n_Seg, eid, ring):
-        super(BoltGroup_Abstract, self).__init__(eid, ring, BoltGroup_Instance)
-        self.n_Seg = n_Seg
-        self.instantiate_Param_List = ['n_Seg', 'eid']
+        super(BoltGroup_Abstract, self).__init__(n_Seg, eid, ring, BoltGroup_Instance)
 
     def applyBolt_Group(self, y_Coord, parentInstance):
         _instance = self.instantiate(parentInstance, y_Coord=y_Coord)
@@ -204,7 +202,7 @@ class BoltGroup_Instance(AbstractGroup_Instance):
         super(BoltGroup_Instance, self).__init__(y_Coord, parent, generator, manager)
 
     def __repr__(self):
-        return 'Bolt group instance at Y={y_Coord}'.format(y_Coord=self.y_Coord)
+        return '{i}th bolt group instance at Y={y_Coord}'.format(i=self.sequenceNumber, y_Coord=self.y_Coord)
 
     def createBoltEntity(self, i):
         _boltEntity = BoltEntity(

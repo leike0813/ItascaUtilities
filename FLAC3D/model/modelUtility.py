@@ -128,7 +128,7 @@ class ModelUtility(object):
         )
         groupBound_z = []
         groupNameSeq = []
-        for groupName in self.zoneUtil.materialSlots[slotName].groupList:
+        for groupName in self.zoneUtil.materialSlots[slotName].rangeGroups:
             groupNameSeq.append(groupName)
             groupBound_z.append(self.zoneUtil.bounding_Group(groupName, direction=2))
         groupBound_z = np.array(groupBound_z)
@@ -140,12 +140,12 @@ class ModelUtility(object):
         zonePos_z = self.zoneUtil.pos_z
         surface_z = self.gpUtil.bounding_z[1]
         grav_z = it.gravity_z()
-        for i in range(self.zoneUtil.materialSlots[slotName].n_Groups - 1, -1, -1):
+        for i in range(self.zoneUtil.materialSlots[slotName].n_Group - 1, -1, -1):
             bound_ = groupBound_z[boundSort[i][0]]
             group_ = groupNameSeq[boundSort[i][0]]
             prop_ = self.zoneUtil.materialSlots[slotName].propertyDicts_Group[group_]
             groupMask = za.in_group(group_, 'any')
-            if i != self.zoneUtil.materialSlots[slotName].n_Groups - 1:
+            if i != self.zoneUtil.materialSlots[slotName].n_Group - 1:
                 burdenStress_Accu = burdenStress_Prev + (bound_Prev - bound_[1]) * density_Prev * grav_z
             """#Useless. Reserve for future reuse.
             if 'young' in prop_.keys():

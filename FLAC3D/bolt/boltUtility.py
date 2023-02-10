@@ -38,11 +38,11 @@ class BoltUtility(AbstractSubUtility):
         )
 
     @y_Bound_Detect('y_Bound')
-    def applyBolt_YRange(self, y_Bound):
+    def applyBolt_YRange(self, y_Bound, groups='All'):
         for b_r in self.rings:
-            b_r.applyBolt_YRange_Ring(y_Bound)
+            b_r.applyBolt_YRange_Ring(y_Bound, groups)
 
     @n_Step_Detect
-    def applyBolt_Step(self, n_Step):
+    def applyBolt_Step(self, n_Step, groups='All'):
         for b_r in self.rings:
-            b_r.applyBolt_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step])
+            b_r.applyBolt_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step], groups)

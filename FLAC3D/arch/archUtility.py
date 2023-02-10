@@ -17,20 +17,20 @@ class ArchUtility(AbstractSubUtility):
     def __init__(self, model=None):
         super(ArchUtility, self).__init__(model)
 
-    def newArchRing(self, y_Bound_Global, spacing, n_Seg, propertyDict, eid='default'):
+    def newArchRing(self, y_Bound_Global, spacing, propertyDict, eid='default'):
         """
         增加新的ArchRing
         """
-        archRing = ArchRing(y_Bound_Global, spacing, n_Seg, propertyDict, eid, self)
+        archRing = ArchRing(y_Bound_Global, spacing, propertyDict, eid, self)
         self.addRing(archRing)
         return archRing
 
-    def newArchRing_Direct(self, y_Bound_Global, spacing, n_Seg, propertyDict, nodeCoord=None, _symmetry=False, eid='default'):
+    def newArchRing_Direct(self, y_Bound_Global, spacing, propertyDict, nodeCoord=None, _symmetry=False, eid='default'):
         """
         增加新的ArchRing_Direct
         20220327：*已优化代码，ArchRing_Direct暂时保留以向后兼容。
         """
-        archRing = ArchRing_Direct(y_Bound_Global, spacing, n_Seg, propertyDict, nodeCoord, _symmetry, eid, self)
+        archRing = ArchRing_Direct(y_Bound_Global, spacing, propertyDict, nodeCoord, _symmetry, eid, self)
         self.addRing(archRing)
         return archRing
 
@@ -47,12 +47,38 @@ class ArchUtility(AbstractSubUtility):
             )
         )
 
+    @staticmethod
+    def applyArch_ByNode(node1_id, node2_id, n_Seg, eid):
+        it.command(
+            'structure beam create by-nodeids {node1_id} {node2_id} segments {_nseg} id {id}'.format(
+                node1_id=node1_id,
+                node2_id=node2_id,
+                _nseg=n_Seg,
+                id=eid
+            )
+        )
+        it.command(
+            'structure node initialize position (0, 0, 0) add range component-id {node1_id} {node2_id}'.format(
+                node1_id=node1_id,
+                node2_id=node2_id
+            )
+        )
+
+    @staticmethod
+    def applyArch_ByNodeAndCoord(beginNode_id, endPos, n_Seg, eid):
+        it.command(
+            'structure node create {pos}'.format(pos=tuple(endPos))
+        )
+        _endNode_id = it.structure.node.maxid()
+        ArchUtility.applyArch_ByNode(beginNode_id, _endNode_id, n_Seg, eid)
+        #return _endNode_id
+
     @y_Bound_Detect('y_Bound')
-    def applyArch_YRange(self, y_Bound):
+    def applyArch_YRange(self, y_Bound, groups='All'):
         for a_r in self.rings:
-            a_r.applyArch_YRange_Ring(y_Bound)
+            a_r.applyArch_YRange_Ring(y_Bound, groups)
 
     @n_Step_Detect
-    def applyArch_Step(self, n_Step):
+    def applyArch_Step(self, n_Step, groups='All'):
         for a_r in self.rings:
-            a_r.applyArch_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step])
+            a_r.applyArch_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step], groups)

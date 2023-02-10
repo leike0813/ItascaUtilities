@@ -9,10 +9,10 @@ class AbstractTBMComponent(AbstractSubUtility):
     '''
     TBM组件的抽象基类
     '''
-    def __init__(self, groupList, propertyDict, eid, util):
+    def __init__(self, rangeGroups, propertyDict, eid, util):
         super(AbstractTBMComponent, self).__init__(util.modelUtil)
         self.__util = util
-        self.groupList = groupList
+        self.rangeGroups = rangeGroups
         self.eid = eid
         self.propertyDict = propertyDict
 

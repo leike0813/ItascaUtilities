@@ -2,6 +2,7 @@
 import itasca as it
 import numpy as np
 from ..customFunctions import generatePropertyPhrase, generateRangePhrase
+from ..customDecorators import *
 from ..structuralComponent.abstractRing import AbstractRing, AbstractRing_Instance
 from boltGroup import *
 from .. import globalContainer as gc
@@ -69,9 +70,17 @@ class BoltRing(AbstractRing):
     def setBoltProperty(self, eid, propertyDict):
         self.propertyDict[eid] = propertyDict
 
-    def applyBolt_Single(self, y_Coord, _assignProp = False):
-        _instance = self.instantiate(self.modelUtil.entityManager.boltManager, y_Coord=y_Coord)
-        for b_gr in self.groups:
+    def applyBolt_Single(self, y_Coord, groups='All', _assignProp = False):
+        _instantiated = False
+        for inst in self.instances:
+            if inst.y_Coord == y_Coord:
+                _instance = inst
+                _instantiated = True
+                break
+        if not _instantiated:
+            _instance = self.instantiate(self.modelUtil.entityManager.boltManager, y_Coord=y_Coord)
+        groups = self.group_Convert(groups)
+        for b_gr in groups:
             b_gr.applyBolt_Group(y_Coord, _instance)
         if _assignProp:
             for eid, _propDict in self.propertyDict.items():
@@ -82,7 +91,8 @@ class BoltRing(AbstractRing):
                     )
                 )
 
-    def applyBolt_YRange_Ring(self, y_Bound):
+    @y_Bound_Detect('y_Bound')
+    def applyBolt_YRange_Ring(self, y_Bound, groups='All'):
         y_Bound = np.clip(y_Bound, self.y_Bound_Global[0], self.y_Bound_Global[1])
         cross_Range = np.array(
             [int((y_Bound[0] - gc.param['geom_tol'] - self.y_Bound_Global[0]) // self.spacing),
@@ -90,7 +100,7 @@ class BoltRing(AbstractRing):
         )
         n_Cross = cross_Range[1] - cross_Range[0]
         for i in range(n_Cross):
-            self.applyBolt_Single((cross_Range[1] - i) * self.spacing + self.y_Bound_Global[0])
+            self.applyBolt_Single((cross_Range[0] + i + 1) * self.spacing + self.y_Bound_Global[0], groups)
         if n_Cross > 0:
             for eid, _propDict in self.propertyDict.items():
                 it.command(
@@ -99,6 +109,10 @@ class BoltRing(AbstractRing):
                         rangePhrase=generateRangePhrase(ypos=y_Bound, id=eid)
                     )
                 )
+
+    @n_Step_Detect
+    def applyBolt_Step_Ring(self, n_Step, groups='All'):
+        self.applyBolt_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step], groups)
 
 
 class BoltRing_Instance(AbstractRing_Instance):
@@ -244,7 +258,7 @@ class BoltRing_Instance(AbstractRing_Instance):
 #         )
 #         n_Cross = cross_Range[1] - cross_Range[0]
 #         for i in range(n_Cross):
-#             self.applyBolt_Single((cross_Range[1] - i) * self.spacing + self.y_Bound_Global[0])
+#             self.applyBolt_Single((cross_Range[0] + i + 1) * self.spacing + self.y_Bound_Global[0])
 #         if n_Cross > 0:
 #             for eid, _propDict in self.propertyDict.items():
 #                 it.command(

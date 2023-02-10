@@ -96,8 +96,8 @@ class ExcavationUtility(AbstractSubUtility):
         ]
         self._parameter_Setted = True
 
-    def newExcaGroup(self, y_Bound_Global, groupList, slotName, _assignModel=True):
-        excaGroup = ExcaGroup(y_Bound_Global, groupList, slotName, self, _assignModel)
+    def newExcaGroup(self, y_Bound_Global, rangeGroups, slotName, _assignModel=True):
+        excaGroup = ExcaGroup(y_Bound_Global, rangeGroups, slotName, self, _assignModel)
         self.__excaGroupList.append(excaGroup)
         return excaGroup
 
@@ -157,12 +157,12 @@ class ExcavationUtility(AbstractSubUtility):
         print('Excavation finished.')
 
     @staticmethod
-    def exca(y_Bound, groupList, cModel, propertyDict):
+    def exca(y_Bound, rangeGroups, cModel, propertyDict):
         ZoneUtility.assignMaterial(
             cModel,
             propertyDict,
             'group {groupPhrase} {rangePhrase}'.format(
-                groupPhrase=generateGroupRangePhrase(groupList),
+                groupPhrase=generateGroupRangePhrase(rangeGroups),
                 rangePhrase=generateRangePhrase(ypos=y_Bound)
             )
         )

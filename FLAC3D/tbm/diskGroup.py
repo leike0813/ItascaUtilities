@@ -16,7 +16,7 @@ class DiskGroup(AbstractTBMComponent):
     def current_eid(cls):
         return cls.base_eid + cls.eid_Offset
 
-    def __init__(self, groupList, n_Disks, disk_Diameter, tipWidth, model_Area, propertyDict, eid, util):
+    def __init__(self, rangeGroups, n_Disks, disk_Diameter, tipWidth, model_Area, propertyDict, eid, util):
         if eid == 'default':
             eid = DiskGroup.current_eid()
             if DiskGroup.eid_Offset < 7:
@@ -26,7 +26,7 @@ class DiskGroup(AbstractTBMComponent):
                     """The maximum eid_offset of DiskGroup is reached.
                     The eid of new DiskGroup will not be increased automatically."""
                 )
-        super(DiskGroup, self).__init__(groupList, propertyDict, eid, util)
+        super(DiskGroup, self).__init__(rangeGroups, propertyDict, eid, util)
         self.n_Disks = n_Disks
         self.disk_Diameter = disk_Diameter
         self.tipWidth = tipWidth
@@ -59,7 +59,7 @@ class DiskGroup(AbstractTBMComponent):
         # it.command(
         #     'structure liner create by-face id ' + str(self.eid) \
         #     + ' group "__Disk_' + str(self.eid) + '__" slot "__TBMUtil__" range group ' \
-        #     + generateGroupRangePhrase(self.groupList) + ' position-y ' \
+        #     + generateGroupRangePhrase(self.rangeGroups) + ' position-y ' \
         #     + str(y_Coord - 100 * gc.param['geom_tol']) + ' ' + str(y_Coord + 100 * gc.param['geom_tol'])
         # )
         # it.command(
@@ -72,7 +72,7 @@ class DiskGroup(AbstractTBMComponent):
                 id=self.eid,
                 sourceGroup='"__Disk_{id}__"'.format(id=self.eid),
                 sourceSlot='"__TBMUtil__"',
-                groupPhrase=generateGroupRangePhrase(self.groupList),
+                groupPhrase=generateGroupRangePhrase(self.rangeGroups),
                 rangePhrase=generateRangePhrase(ypos=y_Coord)
             )
         )

@@ -2,9 +2,8 @@
 import itasca as it
 import numpy as np
 from ..customFunctions import generatePropertyPhrase, generateRangePhrase, generateFixityPhrase
+from ..customDecorators import *
 from ..structuralComponent.abstractRing import AbstractRing, AbstractRing_Instance
-from arch import ArchElement
-from ..structuralComponent.node import Node
 from archGroup import *
 from .. import globalContainer as gc
 
@@ -26,7 +25,7 @@ class ArchRing_Abstract(AbstractRing):
     def current_eid(cls):
         return cls.arch_base_eid + cls.arch_eid_Offset
 
-    def __init__(self, y_Bound_Global, spacing, n_Seg, propertyDict, eid, util):
+    def __init__(self, y_Bound_Global, spacing, propertyDict, eid, util):
         if eid == 'default':
             eid = ArchRing_Abstract.current_eid()
             if ArchRing_Abstract.arch_eid_Offset < 19:
@@ -38,9 +37,7 @@ class ArchRing_Abstract(AbstractRing):
                 )
         super(ArchRing_Abstract, self).__init__(y_Bound_Global, propertyDict, eid, util, ArchRing_Instance)
         self.spacing = spacing
-        self.n_Seg = n_Seg
         self.__nodeCoord = None
-        self.instantiate_Param_List = ['n_Seg', 'eid']
 
     def registerInstance(self, instance):
         _paramDict = {
@@ -60,21 +57,29 @@ class ArchRing_Abstract(AbstractRing):
         if type(arr) is np.ndarray:
             self.__nodeCoord.flags.writeable = False
 
-    def applyArch_Single(self, y_Coord, _assignProp = False):
+    def applyArch_Single(self, y_Coord, groups='All', _assignProp = False):
         """
         在y坐标为y_的位置施加一环ArchRing
         """
-        _instance = self.instantiate(self.modelUtil.entityManager.archManager, y_Coord=y_Coord)
-        for a_gr in self.groups:
-            a_gr.instantiate(_instance, y_Coord=y_Coord)
-
-        for i in range(self.nodeCoord.shape[0] - 1):
-            self.util.applyArch_ByLine(
-                [self.nodeCoord[i, 0], y_Coord, self.nodeCoord[i, 1]],
-                [self.nodeCoord[i + 1, 0], y_Coord, self.nodeCoord[i + 1, 1]],
-                self.n_Seg,
-                self.eid
-            )
+        _instantiated = False
+        for inst in self.instances:
+            if inst.y_Coord == y_Coord:
+                _instance = inst
+                _instantiated = True
+                break
+        if not _instantiated:
+            _instance = self.instantiate(self.modelUtil.entityManager.archManager, y_Coord=y_Coord)
+        groups = self.group_Convert(groups)
+        for a_gr in groups:
+            a_gr.applyArch_Group(y_Coord, _instance)
+        #     a_gr.instantiate(_instance, y_Coord=y_Coord)
+        # for i in range(self.nodeCoord.shape[0] - 1):
+        #     self.util.applyArch_ByLine(
+        #         [self.nodeCoord[i, 0], y_Coord, self.nodeCoord[i, 1]],
+        #         [self.nodeCoord[i + 1, 0], y_Coord, self.nodeCoord[i + 1, 1]],
+        #         self.n_Seg,
+        #         self.eid
+        #     )
         if np.any(abs(self.modelUtil.gpUtil.bounding_y - y_Coord) < gc.param['geom_tol']):
             # 若输入的y坐标为模型的y向边界，则施加y向对称约束
             it.command(
@@ -92,7 +97,8 @@ class ArchRing_Abstract(AbstractRing):
                 )
             )
 
-    def applyArch_YRange_Ring(self, y_Bound):
+    @y_Bound_Detect('y_Bound')
+    def applyArch_YRange_Ring(self, y_Bound, groups='All'):
         """
         在y_Bound给定的y坐标范围内，根据ArchRing的spacing自动计算需要施加ArchRing的位置
         """
@@ -106,7 +112,7 @@ class ArchRing_Abstract(AbstractRing):
         n_Cross = cross_Range[1] - cross_Range[0]
         # 逐环调用applyArch_Ring方法施加单元
         for i in range(n_Cross):
-            self.applyArch_Single((cross_Range[1] - i) * self.spacing + self.y_Bound_Global[0])
+            self.applyArch_Single((cross_Range[0] + i + 1) * self.spacing + self.y_Bound_Global[0], groups)
         if n_Cross > 0:
             # 若成功施加了一环以上的单元，则赋予参数
             it.command(
@@ -115,6 +121,10 @@ class ArchRing_Abstract(AbstractRing):
                     rangePhrase=generateRangePhrase(ypos=y_Bound, id=self.eid)
                 )
             )
+
+    @n_Step_Detect
+    def applyArch_Step_Ring(self, n_Step, groups='All'):
+        self.applyArch_YRange_Ring(self.modelUtil.excaUtil.y_BoundList[n_Step], groups)
 
 
 class ArchRing(ArchRing_Abstract):
@@ -126,8 +136,8 @@ class ArchRing(ArchRing_Abstract):
     20220327：*已优化代码，ArchRing现在不再继承自ArchRing_Abstract抽象基类，抽象基类中代码已整合入内。
     20230115：*回滚上一条改动，ArchRing仍继承ArchRing_Abstract抽象基类
     """
-    def __init__(self, y_Bound_Global, spacing, n_Seg, propertyDict, eid, util):
-        super(ArchRing, self).__init__(y_Bound_Global, spacing, n_Seg, propertyDict, eid, util)
+    def __init__(self, y_Bound_Global, spacing, propertyDict, eid, util):
+        super(ArchRing, self).__init__(y_Bound_Global, spacing, propertyDict, eid, util)
 
     def calculateNodeCoord(self):
         """
@@ -148,20 +158,20 @@ class ArchRing(ArchRing_Abstract):
                     _nodeCoord = np.vstack((_nodeCoord, self.groups[i].nodeCoord[:]))
             self.setNodeCoord(_nodeCoord)
 
-    def newArchGroup(self, angle_Bound, n_Line, origin, radius):
+    def newArchGroup(self, n_Seg, angle_Bound, n_Line, origin, radius):
         """
         增加新的ArchGroup
         """
-        archGroup = ArchGroup(angle_Bound, n_Line, origin, radius, self)
+        archGroup = ArchGroup(n_Seg, angle_Bound, n_Line, origin, radius, self)
         self.addGroup(archGroup)
         return archGroup
 
-    def newArchGroup_Direct(self, nodeCoord = None, _symmetry = False):
+    def newArchGroup_Direct(self, n_Seg, nodeCoord = None, _symmetry = False):
         """
         增加新的ArchGroup_Direct
         默认nodeCoord为None，若如此，则需要调用ArchGroup_Direct中的getArchGPCoordAndSort计算nodeCoord
         """
-        archGroup = ArchGroup_Direct(nodeCoord, _symmetry, self)
+        archGroup = ArchGroup_Direct(n_Seg, nodeCoord, _symmetry, self)
         self.addGroup(archGroup)
         return archGroup
 
@@ -175,8 +185,8 @@ class ArchRing_Direct(ArchRing_Abstract):
     20220325：*存在进一步优化的可能，Ring级容器不分Direct与否，全部交由Group级容器管理。前台业务代码需相应改变。
     20220327：*已根据前一条issue优化代码，ArchRing_Direct保留，以满足代码向后兼容。getArchGPCoordAndSort函数整合入ArchGroup_Direct。
     """
-    def __init__(self, y_Bound_Global, spacing, n_Seg, propertyDict, nodeCoord, _symmetry, eid, util):
-        super(ArchRing_Direct, self).__init__(y_Bound_Global, spacing, n_Seg, propertyDict, eid, util)
+    def __init__(self, y_Bound_Global, spacing, propertyDict, nodeCoord, _symmetry, eid, util):
+        super(ArchRing_Direct, self).__init__(y_Bound_Global, spacing, propertyDict, eid, util)
         self.setNodeCoord(nodeCoord)
         self._symmetry = _symmetry and self.modelUtil.modelType == gc.ModelType.full_Model #_symmety标志仅在全模型时生效
         self.instantiate_Param_List.append('_symmetry')
@@ -248,45 +258,3 @@ class ArchRing_Instance(AbstractRing_Instance):
 
     def __repr__(self):
         return 'ArchRing instance at Y={y_Coord}'.format(y_Coord=self.y_Coord)
-
-    def __createNode(self, sequenceNumber, node_cid):
-        _node = Node(
-            self.eid,
-            self.ringNumber,
-            0,
-            sequenceNumber,
-            node_cid,
-            self,
-            self.manager
-        )
-        self.addNode(_node)
-        self.manager.nodeManager.add(_node)
-        return _node
-
-    def __createArchElement(self, sequenceNumber, cid, nodes):
-        _archElement = ArchElement(
-            self.eid,
-            self.ringNumber,
-            0,
-            sequenceNumber,
-            cid,
-            nodes,
-            self,
-            self.manager
-        )
-        self.addElement(_archElement)
-        self.manager.elementManager.add(_archElement)
-        return _archElement
-
-    def createArchSegment(self): # 有了管理实例后考虑将Arch的施加逻辑重组，此处先不管他
-        cid = it.structure.maxid() + 1
-        node_cid = it.structure.node.maxid() + 1
-        for i in range(self.n_Seg):
-            if i == 0:
-                _node1 = self.__createNode(1, node_cid, 1)
-                node_cid += 1
-            _node2 = self.__createNode(i + 2, node_cid)
-            node_cid += 1
-            self.__createArchElement(i + 1, cid, (_node1, _node2))
-            cid += 1
-            _node1 = _node2
